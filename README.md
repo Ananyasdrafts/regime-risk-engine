@@ -15,9 +15,6 @@ know what the true chance of a big loss was yesterday, so a backtest can only co
 breaches after the fact. So I built a synthetic market where I know both: every shift is
 labelled, and every day's true breach probability can be computed exactly. Then I can
 watch a Value-at-Risk model go wrong day by day and time every alarm against the truth.
-It's the same question behind [MedMaps](https://github.com/Ananyasdrafts/medmaps) and
-[Vigil](https://github.com/Ananyasdrafts/vigil), when should a model admit it can't be
-trusted, asked about market risk this time.
 
 200 simulated markets, 3,000 trading days each, 1,791 regime shifts. Every number is in
 [docs/results.json](docs/results.json).

@@ -1,44 +1,61 @@
 # Regime Risk Engine
 
-A synthetic market where I know exactly when every regime shift happens and what the
-true risk was on every day. I use it to test how long a standard Value-at-Risk model
-stays wrong after a shift, and whether conformal calibration with abstention notices
-sooner than the Basel backtest a bank would actually run.
+> **When does a risk model stop being trustworthy after a regime shift, and can adaptive
+> calibration with abstention detect that failure earlier than standard backtesting?**
+
+**Short answer:** the model stops being trustworthy the day the regime shifts, and stays
+that way for somewhere between three weeks and several months depending on what changed.
+Abstention does catch it much earlier than standard backtesting, but usually not before
+the damage is done.
 
 `status: v1 complete`
 
-On real data you can't check this. You don't know when the regime changed, and you don't
+You can't answer this on real data. You don't know when the regime changed, and you don't
 know what the true chance of a big loss was yesterday, so a backtest can only count
-breaches after the fact. In a simulator you know both, so you can watch a model go wrong
-day by day. It's the same question behind [MedMaps](https://github.com/Ananyasdrafts/medmaps)
-and [Vigil](https://github.com/Ananyasdrafts/vigil), when should a model admit it can't
-be trusted, asked about market risk this time.
-
-## what I found
+breaches after the fact. So I built a synthetic market where I know both: every shift is
+labelled, and every day's true breach probability can be computed exactly. Then I can
+watch a Value-at-Risk model go wrong day by day and time every alarm against the truth.
+It's the same question behind [MedMaps](https://github.com/Ananyasdrafts/medmaps) and
+[Vigil](https://github.com/Ananyasdrafts/vigil), when should a model admit it can't be
+trusted, asked about market risk this time.
 
 200 simulated markets, 3,000 trading days each, 1,791 regime shifts. Every number is in
 [docs/results.json](docs/results.json).
 
-- **conformal fixes the tail.** The Gaussian model's 99% VaR gets breached 1.98% of the
-  time instead of 1%, and a Kupiec test rejects it on 98.5% of paths. Conformal brings
-  it to 0.99%. Expected Shortfall goes from 18% too low to 5% too high.
-- **abstention beats the regulatory backtest by a lot.** Of the 324 shifts that did real
-  damage, abstention caught 51% within 150 days. The Basel traffic light caught 7.5%.
-  When both fired, abstention was a median 25 days earlier.
-- **but it mostly fires after the damage is done.** When volatility jumps, the true
-  chance of breaching the 95% VaR hits 24% on day one, nearly 5x what it should be. The
-  model then fixes itself in about 22 days. Abstention needs about the same time to be
-  sure, so it tends to go off just as the problem is going away. Sitting out 9% of days
-  barely changed how many badly wrong forecasts went out (5.39% to 5.34%).
-- **conformal has its own blind spot, it remembers too long.** When the tails get
-  lighter, it's still calibrated on 250 days of the old heavy-tailed losses, and ends up
-  *worse* than the naive model (8% vs 6.3% true breach chance) for about 80 days.
+## when does the model stop being trustworthy?
+
+- **immediately.** When volatility jumps, the true chance of breaching the 95% VaR hits
+  24% on day one, nearly 5x what it should be.
+- **for how long depends on what changed.** After a volatility jump the model fixes
+  itself in about 22 days. When the tails get lighter at the same volatility, the
+  conformal model is still calibrated on 250 days of the old heavy-tailed losses and is
+  *worse* than the naive one (8% vs 6.3% true breach chance) for about 80 days. After a
+  single liquidity shock it stays overly cautious for about 200 days, because that one
+  loss sits in its calibration window.
+- **and a passing backtest won't tell you.** Conformal fixes the overall tail: the
+  Gaussian model's 99% VaR gets breached 1.98% of the time and fails Kupiec on 98.5% of
+  paths, conformal gets 0.99% and passes on every path. It's still badly wrong for weeks
+  after every shift. Averaged over years, those weeks disappear.
+
+## can abstention catch it earlier than backtesting?
+
+- **yes, much earlier.** Of the 324 shifts that did real damage, abstention caught 51%
+  within 150 days. The Basel traffic light caught 7.5% and a rolling Kupiec test 1.9%.
+  When both fired, abstention was a median 25 days ahead of Basel, and 54 days ahead on
+  the tail-lightening case.
+- **but usually not before the damage.** After a volatility jump abstention needs about
+  23 days to be sure, roughly the time the model takes to fix itself. So it tends to go
+  off just as the problem is going away. Sitting out 9% of days barely changed how many
+  badly wrong forecasts went out (5.39% to 5.34%).
+- **the reason is how little each day tells you.** Abstention, like every backtest,
+  counts breaches. That's one bit a day, and at 95% the bit is almost always zero, so any
+  alarm built on it needs weeks of evidence.
 
 ![Event study: true breach probability around each shift, and how fast each alarm fires](docs/images/event_study.png)
 
-The top row lines up every shift on the day it happened and shows the true breach
-probability. The bottom row shows how many shifts each alarm has caught by each day
-after.
+The top row answers the first question: every shift lined up on the day it happened,
+with the true breach probability around it. The bottom row answers the second: how many
+shifts each alarm has caught by each day after.
 
 ## what I built
 
@@ -94,11 +111,11 @@ days, because that one loss stays in the calibration window.
 
 ## what I learned
 
-- Counting breaches doesn't tell you much. Each day gives one bit, and at 95% that bit is
-  almost always zero. A 50-day monitor needs about three weeks to be sure and a 250-day
-  regulatory test needs months, both slower than a reasonably quick model fixes itself.
-- A passing backtest isn't a calibrated model. Conformal passed Kupiec on every path and
-  was still badly wrong for weeks after every shift. You only see that with ground truth.
+- The right bar for an alarm isn't "faster than Basel", it's "faster than the model fixes
+  itself". Beating the backtest was easy. Beating the model's own recovery is the hard,
+  useful part, and nothing that counts breaches gets there.
+- "Is the model calibrated?" is really two questions: on average, and right now. Most
+  backtests only answer the first. Ground truth is what let me separate them.
 - Calibration has memory, and memory has a cost. The window that makes conformal robust
   is the same thing that makes it slow to forget an old regime.
 

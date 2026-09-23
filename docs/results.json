@@ -1,0 +1,310 @@
+{
+  "config": {
+    "alpha": 0.05,
+    "alpha_tail": 0.01,
+    "alpha_es": 0.025,
+    "lam": 0.94,
+    "cal_window": 250,
+    "gamma": 0.005,
+    "abst_window": 50,
+    "k_enter": 6,
+    "drift": 0.03
+  },
+  "headline": {
+    "n_paths": 200,
+    "n_shifts_scored": 1791,
+    "n_harmful_shifts": 324,
+    "harmful_definition": ">= 2.0 expected excess 95% VaR breaches within the horizon",
+    "abstention_detect_rate_harmful": 0.5066225165562914,
+    "abstention_median_lag_harmful": 56.0,
+    "basel_detect_rate_harmful": 0.07523510971786834,
+    "basel_median_lag_harmful": 88.5,
+    "kupiec_detect_rate_harmful": 0.018518518518518517,
+    "abstention_first_rate_harmful": 0.4966442953020134,
+    "abstention_median_lead_vs_basel_days": 25.5,
+    "false_alarm_share_steady_state": {
+      "abstain": 0.08592998653587228,
+      "basel": 0.02894787459126755,
+      "kupiec": 0.004315733794960569
+    },
+    "vol_up_peak_true_p95": 0.23741701665269654,
+    "vol_up_days_until_true_p95_below_6pct": 22,
+    "mean_true_p95_on_abstained_days": 0.04640362298634126,
+    "mean_true_p95_on_issued_days": 0.049883096248139885,
+    "danger_rate_no_abstention": 0.053882,
+    "danger_rate_default_k": 0.05340827685016807,
+    "answered_default_k": 0.90735
+  },
+  "backtests": [
+    {
+      "model": "naive",
+      "level": 0.95,
+      "breach_rate": 0.05016,
+      "kupiec_reject_share": 0.035,
+      "christoffersen_reject_share": 0.175
+    },
+    {
+      "model": "naive",
+      "level": 0.99,
+      "breach_rate": 0.019782,
+      "kupiec_reject_share": 0.985,
+      "christoffersen_reject_share": 0.11
+    },
+    {
+      "model": "naive",
+      "level": 0.975,
+      "breach_rate": 0.0322,
+      "kupiec_reject_share": 0.55,
+      "christoffersen_reject_share": 0.125
+    },
+    {
+      "model": "conformal",
+      "level": 0.95,
+      "breach_rate": 0.049936,
+      "kupiec_reject_share": 0.0,
+      "christoffersen_reject_share": 0.075
+    },
+    {
+      "model": "conformal",
+      "level": 0.99,
+      "breach_rate": 0.009866,
+      "kupiec_reject_share": 0.0,
+      "christoffersen_reject_share": 0.055
+    },
+    {
+      "model": "conformal",
+      "level": 0.975,
+      "breach_rate": 0.02496,
+      "kupiec_reject_share": 0.0,
+      "christoffersen_reject_share": 0.06
+    }
+  ],
+  "expected_shortfall": [
+    {
+      "model": "naive",
+      "es_over_true_median_all": 0.8184236684431703,
+      "es_over_true_median_steady": 0.8127823239080114,
+      "share_days_es_understated_20pct": 0.447128
+    },
+    {
+      "model": "conformal",
+      "es_over_true_median_all": 1.0461379571125815,
+      "es_over_true_median_steady": 0.9820258773817077,
+      "share_days_es_understated_20pct": 0.170266
+    }
+  ],
+  "coverage_by_level": [
+    {
+      "nominal": 0.8,
+      "model": "naive",
+      "all": 0.83444,
+      "steady": 0.8300128020483277,
+      "transition": 0.8068456375838926
+    },
+    {
+      "nominal": 0.8,
+      "model": "conformal",
+      "all": 0.8000533333333333,
+      "steady": 0.799807969275084,
+      "transition": 0.7873825503355705
+    },
+    {
+      "nominal": 0.85,
+      "model": "naive",
+      "all": 0.87582,
+      "steady": 0.8733397343574972,
+      "transition": 0.8473825503355704
+    },
+    {
+      "nominal": 0.85,
+      "model": "conformal",
+      "all": 0.85006,
+      "steady": 0.8492158745399264,
+      "transition": 0.8323489932885906
+    },
+    {
+      "nominal": 0.9,
+      "model": "naive",
+      "all": 0.91388,
+      "steady": 0.9123059689550328,
+      "transition": 0.8867785234899329
+    },
+    {
+      "nominal": 0.9,
+      "model": "conformal",
+      "all": 0.8999933333333333,
+      "steady": 0.8973035685709714,
+      "transition": 0.8840268456375839
+    },
+    {
+      "nominal": 0.95,
+      "model": "naive",
+      "all": 0.9495466666666666,
+      "steady": 0.9495919347095535,
+      "transition": 0.9264429530201342
+    },
+    {
+      "nominal": 0.95,
+      "model": "conformal",
+      "all": 0.94998,
+      "steady": 0.9478316530644904,
+      "transition": 0.938255033557047
+    },
+    {
+      "nominal": 0.975,
+      "model": "naive",
+      "all": 0.9678266666666666,
+      "steady": 0.9685949751960313,
+      "transition": 0.948255033557047
+    },
+    {
+      "nominal": 0.975,
+      "model": "conformal",
+      "all": 0.9750066666666667,
+      "steady": 0.9745559289486317,
+      "transition": 0.963489932885906
+    },
+    {
+      "nominal": 0.99,
+      "model": "naive",
+      "all": 0.9802666666666666,
+      "steady": 0.9815570491278605,
+      "transition": 0.9621476510067114
+    },
+    {
+      "nominal": 0.99,
+      "model": "conformal",
+      "all": 0.9901333333333333,
+      "steady": 0.9894783165306449,
+      "transition": 0.9814765100671141
+    }
+  ],
+  "risk_coverage": [
+    {
+      "model": "conformal",
+      "k_enter": 3.0,
+      "answered": 0.6401339999999999,
+      "mean_abs_err": 0.022334452354942295,
+      "danger_rate": 0.05138299168611572
+    },
+    {
+      "model": "conformal",
+      "k_enter": 4.0,
+      "answered": 0.7464160000000001,
+      "mean_abs_err": 0.022402826401570868,
+      "danger_rate": 0.05212910762898973
+    },
+    {
+      "model": "conformal",
+      "k_enter": 5.0,
+      "answered": 0.837086,
+      "mean_abs_err": 0.022498256819389374,
+      "danger_rate": 0.05308892993073591
+    },
+    {
+      "model": "conformal",
+      "k_enter": 6.0,
+      "answered": 0.90735,
+      "mean_abs_err": 0.022560577201990784,
+      "danger_rate": 0.05340827685016807
+    },
+    {
+      "model": "conformal",
+      "k_enter": 7.0,
+      "answered": 0.955168,
+      "mean_abs_err": 0.02256096993278486,
+      "danger_rate": 0.05251432208784214
+    },
+    {
+      "model": "conformal",
+      "k_enter": 8.0,
+      "answered": 0.97996,
+      "mean_abs_err": 0.022586337392974,
+      "danger_rate": 0.05221437609698355
+    },
+    {
+      "model": "conformal",
+      "k_enter": 10.0,
+      "answered": 0.9920739999999999,
+      "mean_abs_err": 0.022630274153493824,
+      "danger_rate": 0.052044504744605743
+    },
+    {
+      "model": "conformal",
+      "k_enter": 12.0,
+      "answered": 0.992984,
+      "mean_abs_err": 0.02263183876444063,
+      "danger_rate": 0.05202903571457345
+    },
+    {
+      "model": "conformal",
+      "k_enter": NaN,
+      "answered": 1.0,
+      "mean_abs_err": 0.022751676025803115,
+      "danger_rate": 0.053882
+    },
+    {
+      "model": "naive",
+      "k_enter": 3.0,
+      "answered": 0.6446999999999999,
+      "mean_abs_err": 0.016055551402081588,
+      "danger_rate": 0.01948503179773538
+    },
+    {
+      "model": "naive",
+      "k_enter": 4.0,
+      "answered": 0.744892,
+      "mean_abs_err": 0.01613701651479937,
+      "danger_rate": 0.020794960880234987
+    },
+    {
+      "model": "naive",
+      "k_enter": 5.0,
+      "answered": 0.8300359999999999,
+      "mean_abs_err": 0.016237843264561257,
+      "danger_rate": 0.0227556395144307
+    },
+    {
+      "model": "naive",
+      "k_enter": 6.0,
+      "answered": 0.904564,
+      "mean_abs_err": 0.016320131660618454,
+      "danger_rate": 0.023772778929959628
+    },
+    {
+      "model": "naive",
+      "k_enter": 7.0,
+      "answered": 0.951424,
+      "mean_abs_err": 0.01635910275026606,
+      "danger_rate": 0.024138554419480693
+    },
+    {
+      "model": "naive",
+      "k_enter": 8.0,
+      "answered": 0.979882,
+      "mean_abs_err": 0.016368539015531175,
+      "danger_rate": 0.024192708918012576
+    },
+    {
+      "model": "naive",
+      "k_enter": 10.0,
+      "answered": 0.9979779999999999,
+      "mean_abs_err": 0.01636257005126778,
+      "danger_rate": 0.02413079246235889
+    },
+    {
+      "model": "naive",
+      "k_enter": 12.0,
+      "answered": 1.0,
+      "mean_abs_err": 0.01636490620962295,
+      "danger_rate": 0.024118
+    },
+    {
+      "model": "naive",
+      "k_enter": NaN,
+      "answered": 1.0,
+      "mean_abs_err": 0.01636490620962295,
+      "danger_rate": 0.024118
+    }
+  ]
+}

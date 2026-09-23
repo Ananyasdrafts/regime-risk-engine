@@ -1,0 +1,18 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# data and run artifacts (anchored to repo root so they don't match src/.../data/)
+/data/
+/artifacts/
+/figures/
+*.parquet
+
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db

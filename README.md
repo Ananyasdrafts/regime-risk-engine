@@ -4,9 +4,10 @@
 > calibration with abstention detect that failure earlier than standard backtesting?**
 
 **Short answer:** most regime shifts do little harm. The ones that do can make the model
-badly miscalibrated right away, and it takes roughly three weeks to a few months to
-recover depending on what changed. Abstention catches that failure much earlier than
-standard backtesting, but usually not before the model has already recovered on its own.
+badly miscalibrated right away, and it takes roughly one to two months (20 to 40
+trading days) to recover depending on what changed. Abstention catches more harmful
+shifts within 150 days than standard backtesting, but it also fires more often, and
+usually not before the model has already recovered on its own.
 
 `status: v1 complete`
 
@@ -17,7 +18,9 @@ labelled, and every day's true breach probability can be computed exactly. Then 
 watch a Value-at-Risk model go wrong day by day and time every alarm against the truth.
 
 200 simulated markets, 3,000 trading days each, 1,791 regime shifts. Every number is in
-[docs/results.json](docs/results.json).
+[docs/results.json](docs/results.json), and all days are trading days. "Recovered" means
+the true chance of breaching the 95% VaR, averaged over every shift of that kind, is back
+under 6%.
 
 ## when does the model stop being trustworthy?
 
@@ -28,19 +31,21 @@ watch a Value-at-Risk model go wrong day by day and time every alarm against the
 - **the harmful ones bite immediately.** When volatility jumps, the true chance of
   breaching the 95% VaR hits 24% on day one, nearly 5x what it should be.
 - **for how long depends on what changed.** After a volatility jump the model fixes
-  itself in about 22 days. When the tails get lighter at the same volatility, the
-  conformal model is still calibrated on 250 days of the old heavy-tailed losses and is
-  *worse* than the naive one (8% vs 6.3% true breach chance) for about 80 days. After a
-  single liquidity shock it stays overly cautious for about 200 days, because that one
-  loss sits in its calibration window.
+  itself in 22 days (the naive model takes 35). When the tails get lighter at the same
+  volatility, the conformal model is still calibrated on 250 days of the old heavy-tailed
+  losses. It peaks at an 8% true breach chance against the naive model's 6.3%, takes 40
+  days to recover against the naive model's 13, and stays worse than naive for 120 of the
+  150 days after. After a single liquidity shock it stays overly cautious for about 190
+  days, because that one loss sits in its calibration window.
 - **and a passing backtest won't tell you.** Conformal improves long-run tail
   calibration. The Gaussian model's 99% VaR gets breached 1.98% of the time and fails
   Kupiec on 98.5% of paths, conformal gets 0.99% and passes on every path. It's still
-  badly wrong for weeks after harmful shifts. Averaged over years, those weeks disappear.
+  badly wrong for one to two months after harmful shifts. Averaged over years, those
+  months disappear.
 
 ## can abstention catch it earlier than backtesting?
 
-- **yes, much earlier.** Of the 324 shifts that did real damage, abstention caught 51%
+- **it catches far more than the backtests.** Of the 324 shifts that did real damage, abstention caught 51%
   within 150 days. The Basel traffic light caught 7.5% and a rolling Kupiec test 1.9%.
   When both fired, abstention was a median 25 days ahead of Basel, and 54 days ahead on
   the tail-lightening case.
@@ -49,13 +54,13 @@ watch a Value-at-Risk model go wrong day by day and time every alarm against the
   settled regimes, Basel for 2.9%). Part of its lead just comes from firing more often.
   A fair comparison would match the false-alarm rates first.
 - **but usually not before the damage.** After a volatility jump abstention needs about
-  23 days to be sure, roughly the time the model takes to fix itself. So it tends to go
-  off just as the problem is going away. Sitting out 9% of days barely changed how many
+  23 days to be sure (median), roughly the time the model takes to fix itself. So it
+  tends to go off just as the problem is going away. Sitting out 9% of days barely changed how many
   badly wrong forecasts went out (5.39% to 5.34%).
 - **the reason is how little each day tells you.** Abstention, like every backtest,
   counts breaches. That's one bit a day, and at 95% the bit is almost always zero, so any
   alarm built on it needs weeks of evidence. Whether that's too slow depends on the
-  forecaster. This EWMA recovers in about three weeks; a slower model would leave an
+  forecaster. This EWMA recovers in about a month; a slower model would leave an
   alarm more room to fire first.
 
 ![Event study: true breach probability around each shift, and how fast each alarm fires](docs/images/event_study.png)
@@ -114,8 +119,8 @@ The per-shift-type breakdown is in [docs/experiment_results.csv](docs/experiment
 
 ![99% VaR from each model on the fixed scenario, with abstention periods shaded](docs/images/var_bands.png)
 
-A single liquidity shock (day 2000) keeps the conformal 99% VaR inflated for about 200
-days, because that one loss stays in the calibration window.
+A single liquidity shock (day 2000) keeps the conformal 99% VaR at about 5x its usual
+level for 189 days, because that one loss stays in the calibration window.
 
 ## what I learned
 

@@ -31,11 +31,12 @@ from regimerisk.evaluate import (
     steady_state_mask,
     summarise_events,
 )
-from regimerisk.generator import monte_carlo
+from regimerisk.generator import fixed_scenario, monte_carlo
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 ARTIFACTS = ROOT / "artifacts"
+RECOVERED = 0.06  # true 95% VaR breach probability counted as back to normal
 
 
 def backtest_table(results):
@@ -106,7 +107,14 @@ def main():
     rc_c = rc[rc.model == "conformal"]
     no_abstain = rc_c[rc_c.k_enter.isna()].iloc[0]
     k_default = rc_c[rc_c.k_enter == cfg.k_enter].iloc[0]
-    vol_up_p = curves["vol_up"]["conf_p95"]
+    after = {k: {m: curves[k][f"{m}_p95"][PRE:] for m in ("conf", "naive")}
+             for k in ("vol_up", "tail_lighter")}
+    fpath = fixed_scenario()
+    fres = run_path(fpath, cfg)
+    shock = int(fpath.shifts.t[fpath.shifts.kind == "liquidity_shock"].iloc[0])
+    ratio = fres["conf_var99"] / fres["naive_var99"]
+    # Day `shock` is forecast before the jump is seen, so start the count the day after.
+    inflated = ratio[shock + 1 :] > 2 * np.median(ratio[shock - 300 : shock])
     p_all = np.concatenate([r["conf_p95"][EVAL_START:] for r in results])
     flag_all = np.concatenate([r["abstain"][EVAL_START:] for r in results])
     headline = {
@@ -122,8 +130,16 @@ def main():
         "abstention_first_rate_harmful": float(harmful.abstain_first_rate),
         "abstention_median_lead_vs_basel_days": float(harmful.median_lead_vs_basel),
         "false_alarm_share_steady_state": false_alarm,
-        "vol_up_peak_true_p95": float(np.nanmax(vol_up_p)),
-        "vol_up_days_until_true_p95_below_6pct": np.argmax(vol_up_p[PRE:] < 0.06).item(),
+        # Recovery = trading days until the mean true breach probability of the
+        # 95% VaR across all such shifts is back under RECOVERED.
+        "recovered_threshold": RECOVERED,
+        **{f"{k}_peak_true_p95_{m}": float(np.nanmax(p))
+           for k, d in after.items() for m, p in d.items()},
+        **{f"{k}_days_to_recover_{m}": np.argmax(p < RECOVERED).item()
+           for k, d in after.items() for m, p in d.items()},
+        "tail_lighter_days_conf_worse_than_naive_of_150": int(
+            (after["tail_lighter"]["conf"] > after["tail_lighter"]["naive"]).sum()),
+        "fixed_liquidity_shock_days_conf_var99_inflated": np.argmin(inflated).item(),
         "mean_true_p95_on_abstained_days": float(p_all[flag_all].mean()),
         "mean_true_p95_on_issued_days": float(p_all[~flag_all].mean()),
         "danger_rate_no_abstention": float(no_abstain.danger_rate),

@@ -25,6 +25,11 @@ judging a noisy alarm with another noisy count.
   tail shape without changing volatility. Splitting them showed they behave in opposite
   ways: fattening the tails makes the 95% VaR too *cautious*, lightening them makes the
   conformal VaR too *tight*. That second case turned into one of the main findings.
+- **I measured "recovered" two different ways.** For volatility jumps I'd counted days
+  until the true breach chance fell under 6%, for lighter tails until it fell under about
+  5%, which made the tail case look twice as slow (80 days instead of 40). Now there's one
+  threshold, set in `run_experiment.py`, and every number in the README is written by the
+  script instead of read off a plot.
 - **I was flattering the Basel test.** Its 250-day window is often already in the yellow
   zone when a shift happens, so it looked like it detected instantly. Now each alarm is
   only scored on shifts where it wasn't already firing.
@@ -37,9 +42,9 @@ flat, and the days abstention flagged were slightly *safer* than the days it did
 
 Before believing that, I checked it wasn't a bug by lining up the true breach probability
 and the abstention flag around every volatility spike. The mechanism is clean. The model
-is badly wrong for about three weeks (24% breach chance on day one), the EWMA heals
-itself on roughly an 11-day half-life, and a 50-day breach count needs about three weeks
-of evidence. By the time the alarm is sure, the problem is mostly gone, and ACI has by
+is badly wrong for about 22 trading days (24% breach chance on day one), the EWMA heals
+itself on roughly an 11-day half-life, and a 50-day breach count needs about 23 trading
+days of evidence. By the time the alarm is sure, the problem is mostly gone, and ACI has by
 then overcorrected into being slightly too cautious.
 
 ## what I'd do differently

@@ -3,10 +3,10 @@
 > **When does a risk model stop being trustworthy after a regime shift, and can adaptive
 > calibration with abstention detect that failure earlier than standard backtesting?**
 
-**Short answer:** the model stops being trustworthy the day the regime shifts, and stays
-that way for somewhere between three weeks and several months depending on what changed.
-Abstention does catch it much earlier than standard backtesting, but usually not before
-the damage is done.
+**Short answer:** most regime shifts do little harm. The ones that do can make the model
+badly miscalibrated right away, and it takes roughly three weeks to a few months to
+recover depending on what changed. Abstention catches that failure much earlier than
+standard backtesting, but usually not before the model has already recovered on its own.
 
 `status: v1 complete`
 
@@ -21,18 +21,22 @@ watch a Value-at-Risk model go wrong day by day and time every alarm against the
 
 ## when does the model stop being trustworthy?
 
-- **immediately.** When volatility jumps, the true chance of breaching the 95% VaR hits
-  24% on day one, nearly 5x what it should be.
+- **only some shifts matter.** 324 of the 1,791 shifts (18%) did real damage, meaning at
+  least two more expected 95% VaR breaches than there should have been. Shifts where
+  volatility falls or tails get heavier mostly make the model too cautious, not
+  dangerous.
+- **the harmful ones bite immediately.** When volatility jumps, the true chance of
+  breaching the 95% VaR hits 24% on day one, nearly 5x what it should be.
 - **for how long depends on what changed.** After a volatility jump the model fixes
   itself in about 22 days. When the tails get lighter at the same volatility, the
   conformal model is still calibrated on 250 days of the old heavy-tailed losses and is
   *worse* than the naive one (8% vs 6.3% true breach chance) for about 80 days. After a
   single liquidity shock it stays overly cautious for about 200 days, because that one
   loss sits in its calibration window.
-- **and a passing backtest won't tell you.** Conformal fixes the overall tail: the
-  Gaussian model's 99% VaR gets breached 1.98% of the time and fails Kupiec on 98.5% of
-  paths, conformal gets 0.99% and passes on every path. It's still badly wrong for weeks
-  after every shift. Averaged over years, those weeks disappear.
+- **and a passing backtest won't tell you.** Conformal improves long-run tail
+  calibration. The Gaussian model's 99% VaR gets breached 1.98% of the time and fails
+  Kupiec on 98.5% of paths, conformal gets 0.99% and passes on every path. It's still
+  badly wrong for weeks after harmful shifts. Averaged over years, those weeks disappear.
 
 ## can abstention catch it earlier than backtesting?
 
@@ -40,13 +44,19 @@ watch a Value-at-Risk model go wrong day by day and time every alarm against the
   within 150 days. The Basel traffic light caught 7.5% and a rolling Kupiec test 1.9%.
   When both fired, abstention was a median 25 days ahead of Basel, and 54 days ahead on
   the tail-lightening case.
+- **it's not a like-for-like race, though.** Abstention looks at the last 50 days, the
+  backtests at 250, and abstention raises more false alarms (it's on for 8.6% of days in
+  settled regimes, Basel for 2.9%). Part of its lead just comes from firing more often.
+  A fair comparison would match the false-alarm rates first.
 - **but usually not before the damage.** After a volatility jump abstention needs about
   23 days to be sure, roughly the time the model takes to fix itself. So it tends to go
   off just as the problem is going away. Sitting out 9% of days barely changed how many
   badly wrong forecasts went out (5.39% to 5.34%).
 - **the reason is how little each day tells you.** Abstention, like every backtest,
   counts breaches. That's one bit a day, and at 95% the bit is almost always zero, so any
-  alarm built on it needs weeks of evidence.
+  alarm built on it needs weeks of evidence. Whether that's too slow depends on the
+  forecaster. This EWMA recovers in about three weeks; a slower model would leave an
+  alarm more room to fire first.
 
 ![Event study: true breach probability around each shift, and how fast each alarm fires](docs/images/event_study.png)
 
@@ -62,7 +72,9 @@ shifts each alarm has caught by each day after.
   liquidity shock that opens with a 6-sigma drop. Every path keeps its true volatility
   and tail shape, so I can compute exactly how likely any VaR number was to be breached.
 - **a deliberately boring baseline.** RiskMetrics EWMA volatility with Gaussian VaR and
-  Expected Shortfall. The forecaster isn't what's being tested.
+  Expected Shortfall. It's simple on purpose: the experiment tests calibration and
+  monitoring, not forecasting, so keeping the forecaster fixed and plain means any
+  difference comes from the layers on top of it.
 - **adaptive conformal VaR and ES** on top of it (ACI, Gibbs and Candès 2021). It
   calibrates the tail from the last 250 standardised losses and nudges its own target
   after every breach or quiet day.
@@ -74,7 +86,7 @@ shifts each alarm has caught by each day after.
 
 ![A fixed scenario: price, returns, and true vs forecast volatility across regimes](docs/images/fixed_scenario.png)
 
-## the numbers
+## results
 
 **tail calibration**
 
@@ -97,8 +109,7 @@ right day to day.
 | Basel traffic light (250-day window) | 7.5% | 88.5 days |
 | Kupiec test (250-day window) | 1.9% | 68 days |
 
-Abstention also goes off on 8.6% of days in settled regimes, against 2.9% for Basel. It
-helps most on conformal's own memory problem, where it's a median 54 days ahead of Basel.
+False alarms, share of days in settled regimes: abstention 8.6%, Basel 2.9%, Kupiec 0.4%.
 The per-shift-type breakdown is in [docs/experiment_results.csv](docs/experiment_results.csv).
 
 ![99% VaR from each model on the fixed scenario, with abstention periods shaded](docs/images/var_bands.png)
@@ -110,7 +121,7 @@ days, because that one loss stays in the calibration window.
 
 - The right bar for an alarm isn't "faster than Basel", it's "faster than the model fixes
   itself". Beating the backtest was easy. Beating the model's own recovery is the hard,
-  useful part, and nothing that counts breaches gets there.
+  useful part, and counting breaches didn't get there against this model.
 - "Is the model calibrated?" is really two questions: on average, and right now. Most
   backtests only answer the first. Ground truth is what let me separate them.
 - Calibration has memory, and memory has a cost. The window that makes conformal robust
@@ -119,9 +130,11 @@ days, because that one loss stays in the calibration window.
 ## limitations
 
 Everything here is simulated. That's the point, since ground truth is what makes the
-measurement possible, but it means the numbers describe this generator, not real
-markets. It's one asset with no correlation between assets, and the forecaster is EWMA
-only. A GARCH forecaster would heal at a different speed and move the timing results.
+measurement possible, but it means the results are properties of this simulated regime
+process, not estimates of how often these things happen in real markets. It's one asset
+with no correlation between assets, and the forecaster is EWMA only, so the timing
+results are relative to how fast EWMA recovers. The abstention vs backtest comparison
+also isn't matched on false-alarm rate yet.
 
 ## run it
 
@@ -142,7 +155,8 @@ the event study). The build log, including the dead ends, is in
 - **a monitor that uses every day, not one bit a day.** Watching the whole standardised
   residual (a rolling mean of z², or a check that forecast quantiles are uniform) should
   have far more power than counting breaches. The real question is whether anything can
-  fire before the model heals itself.
+  fire before the model heals itself, compared against the backtests at the same
+  false-alarm rate this time.
 - **a forecaster that heals at a different speed.** A refit GARCH(1,1) would change the
   window where early detection is even possible.
 - **real returns.** No ground truth there, but I can check whether the same lag shows up

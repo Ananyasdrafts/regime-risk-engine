@@ -4,10 +4,11 @@
 > calibration with abstention detect that failure earlier than standard backtesting?**
 
 **Short answer:** most regime shifts do little harm. The ones that do can make the model
-badly miscalibrated right away, and it takes roughly one to two months (20 to 40
-trading days) to recover depending on what changed. Abstention catches more harmful
-shifts within 150 days than standard backtesting, but it also fires more often, and
-usually not before the model has already recovered on its own.
+badly miscalibrated right away. Getting back to normal takes 22 to 40 trading days
+depending on what changed, and after a big shock the model can stay overly cautious for
+months after that. Abstention catches more harmful shifts within 150 days than standard
+backtesting, but it also fires more often, and usually not before the model has already
+recovered on its own.
 
 `status: v1 complete`
 
@@ -30,18 +31,18 @@ under 6%.
   dangerous.
 - **the harmful ones bite immediately.** When volatility jumps, the true chance of
   breaching the 95% VaR hits 24% on day one, nearly 5x what it should be.
-- **for how long depends on what changed.** After a volatility jump the model fixes
-  itself in 22 days (the naive model takes 35). When the tails get lighter at the same
+- **for how long depends on what changed.** After a volatility jump the conformal
+  model fixes itself in 22 days (the naive model takes 35). When the tails get lighter at the same
   volatility, the conformal model is still calibrated on 250 days of the old heavy-tailed
-  losses. It peaks at an 8% true breach chance against the naive model's 6.3%, takes 40
-  days to recover against the naive model's 13, and stays worse than naive for 120 of the
+  losses. It peaks at an 8% true breach chance, versus 6.3% for the naive model at the
+  same point, takes 40 days to recover against the naive model's 13, and stays worse than naive for 120 of the
   150 days after. After a single liquidity shock it stays overly cautious for about 190
   days, because that one loss sits in its calibration window.
 - **and a passing backtest won't tell you.** Conformal improves long-run tail
   calibration. The Gaussian model's 99% VaR gets breached 1.98% of the time and fails
   Kupiec on 98.5% of paths, conformal gets 0.99% and passes on every path. It's still
-  badly wrong for one to two months after harmful shifts. Averaged over years, those
-  months disappear.
+  badly wrong for 22 to 40 trading days after harmful shifts. Averaged over years,
+  those stretches disappear.
 
 ## can abstention catch it earlier than backtesting?
 
@@ -86,7 +87,7 @@ shifts each alarm has caught by each day after.
 - **an abstention rule.** Hold back the forecast when the last 50 days had implausibly
   many 95% VaR breaches (6 or more when 2.5 are expected, p ≈ 0.04), or when ACI has had
   to drift far from its nominal level.
-- **the backtests a bank would actually run**, as the thing to beat: Kupiec
+- **standard risk backtests** as the thing to beat, including Kupiec
   proportion-of-failures, Christoffersen independence, and the Basel traffic light.
 
 ![A fixed scenario: price, returns, and true vs forecast volatility across regimes](docs/images/fixed_scenario.png)

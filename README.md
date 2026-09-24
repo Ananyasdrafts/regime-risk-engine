@@ -4,9 +4,9 @@
 > calibration with abstention detect that failure earlier than standard backtesting?**
 
 **Short answer:** most regime shifts do little harm. The ones that do can make the model
-badly miscalibrated right away. Getting back to normal takes 22 to 40 trading days
-depending on what changed, and after a big shock the model can stay overly cautious for
-months after that. Abstention catches more harmful shifts within 150 days than standard
+badly miscalibrated right away. For harmful shifts, getting back to normal takes 22 to
+40 trading days depending on what changed; after a large shock, the conformal model can
+remain overly cautious for months. Abstention catches more harmful shifts within 150 days than standard
 backtesting, but it also fires more often, and usually not before the model has already
 recovered on its own.
 
